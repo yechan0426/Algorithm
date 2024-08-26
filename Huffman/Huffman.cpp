@@ -8,12 +8,12 @@
 using namespace std;
 
 struct Node {
-    char c = '\0';  //문자열
-    int cnt;        //빈도수
+    char c;  //문자열
+    uint32_t cnt;        //빈도수
     Node *left;     //왼쪽 노드
     Node *right;    //오른쪽 노드
 };
-Node *root_node;    //루트 노드
+Node *root_node = nullptr;    //루트 노드
 
 unordered_map<char, uint32_t> huffman_code; //[문자] = 이진코드
 unordered_map<char, uint8_t> h_c_len;       //이진코드의 길이
@@ -25,14 +25,14 @@ struct comp { // 우선순위 큐를 위한 연산자 오버로딩
     }
 };
 
-priority_queue<Node*, vector<Node*>, comp> node_queue; //cnt가 크면 top에 위치
+priority_queue<Node*, vector<Node*>, comp> node_queue; //cnt가 낮으면 top에 위치
 
-void FileRead(vector<string>& v, ifstream& fin) { //파일을 읽고 벡터에 저장
+void FileRead(vector<string>& v, ifstream& fin, long long& len) { //파일을 읽고 벡터에 저장
     string line;
     while (true) {
         getline(fin, line);
         v.push_back(line);
-        cout << line << endl;
+        len += line.size();
         if (fin.eof()) break;
     }
 }
@@ -54,7 +54,6 @@ void MakeHuffmanTree() { //허프먼 트리 생성
         tmp_node->cnt = i.second;
         tmp_node->left = nullptr;
         tmp_node->right = nullptr;
-        printf("%c %d\n", i.first, i.second);
 
         node_queue.push(tmp_node);
         
@@ -93,33 +92,155 @@ void MakeHuffmanCode(Node *node, uint32_t num, uint8_t len) { // 문자열에 �
     MakeHuffmanCode(node->right, num, len+1u);
 }
 
-void WriteByte(ofstream& fout, uint32_t b_code, bool flush) {
+void WriteByte(ofstream& fout, uint32_t b_code, uint8_t b_len, bool flush) {
     static uint32_t bit = 0;
     static int empty_bit = 32;
     if (flush == true)
     {
-        bit << empty_bit;
-        fout << bit;
+        bit = bit << empty_bit;
+        fout.write((char*)&bit, 4);
         return;
     }
+
+    if (b_len > empty_bit) {
+        bit = bit << empty_bit;
+        int tmp = b_code >> (b_len - empty_bit);
+        b_code = b_code | (tmp << (b_len - empty_bit));
+        b_len -= empty_bit;
+        bit = bit | tmp;
+        fout.write((char*)&bit, 4);
+        bit = 0;
+        empty_bit = 32;
+    }
+
+    empty_bit -= b_len;
+    bit = (bit << b_len) | b_code;
 }
 
 void Compress(ifstream& fin, ofstream& fout) {
     vector<string> s_input;                   //입력된 문자열 (string형)
-    vector<uint8_t> compressed;               //압축된 문자열 (8bit형)
+    uint32_t size;
+    long long s_len = 0;
 
-    FileRead(s_input, fin);
+    FileRead(s_input, fin, s_len);
     GetFrequency(s_input);
     MakeHuffmanTree();
-    MakeHuffmanCode(root_node, 0u, 1);
+    MakeHuffmanCode(root_node, 0u, 0);
+
+    //허프만 코드 기록
+    size = huffman_code.size();
+    fout.write((char*)&s_len, sizeof(long long));
+    fout.write((char*)&size, sizeof(uint32_t));
+    for (auto i : huffman_code) {
+        fout.write((char*)&i.first, sizeof(char));
+        fout.write((char*)&i.second, sizeof(uint32_t));
+        fout.write((char*)&h_c_len[i.first], sizeof(uint8_t));
+    }
 
     //압축된 내용저장
     for (string s : s_input) {
         for (char c : s) {
-            WriteByte(fout, huffman_code[c], false);
+            WriteByte(fout, huffman_code[c], h_c_len[c], false);
         }
     }
-    WriteByte(fout, 0, true);// 마지막 비트8개 모이지 않아도 저장
+    WriteByte(fout, 0, 0, true);// 마지막 비트32개 모이지 않아도 저장
+}
+
+void ReMakeHuffTree(char c)
+{
+    if (root_node == nullptr)
+        root_node = (Node*)calloc(1, sizeof(Node));
+
+    // HuffCode와nLength를 이용해서 허프만 트리 구성하기
+    Node* node = nullptr;
+    Node* Temp = nullptr;
+    node = Temp = root_node;
+
+    int nLength = h_c_len[c];
+    unsigned int HuffCode = huffman_code[c];
+
+    while (nLength > 0)
+    {
+        int nBit = (HuffCode >> (nLength - 1)) & 1;
+        if (nBit == 0)
+        {
+            Temp = Temp->left;
+            if (Temp == nullptr)
+            {
+                Temp = (Node*)calloc(1, sizeof(Node));
+                node->left = Temp;
+            }
+        }
+        else
+        {
+            Temp = Temp->right;
+            if (Temp == nullptr)
+            {
+                Temp = (Node*)calloc(1, sizeof(Node));
+                node->right = Temp;
+            }
+        }
+        node = Temp;
+        nLength--;
+    }
+    Temp->c = c;
+}
+
+bool ReadBit(ifstream& fin)
+{
+    static unsigned int Cur = 0;
+    static int Bit = -1;
+    if (Bit < 0)
+    {
+        fin.read((char*)&Cur, 4);
+        Bit = 31;
+    }
+
+    if (fin.eof())
+        return 0;
+
+    bool HuffBit = 0;
+    HuffBit = (Cur >> Bit) & 1;
+    Bit--;
+
+    return HuffBit;
+}
+void Release(ifstream& fin, ofstream& fout) {
+    uint32_t size;
+    char c;
+    uint32_t num;
+    uint8_t len;
+    long long s_len;
+
+    fin.read((char*)&s_len, sizeof(long long));
+    fin.read((char*)&size, sizeof(uint32_t));
+    while(size--) {
+        fin.read((char*)&c, sizeof(char));
+        fin.read((char*)&num, sizeof(uint32_t));
+        fin.read((char*)&len, sizeof(uint8_t));
+        huffman_code[c] = num;
+        h_c_len[c] = len;
+        ReMakeHuffTree(c);
+    }
+
+    Node* node = root_node;
+    bool bit = ReadBit(fin);
+    long long w_len = 0;
+
+    while (w_len < s_len) {
+        while (node->left && node->right) //자식 노드가없는 단말 노드일때까지
+        {
+            if (bit == 0)                 //읽어온 비트가 0이면
+                node = node->left;
+            else                           //읽어온 비트가 1이면
+                node = node->right;
+
+            bit = ReadBit(fin);
+        }
+        fout.write((char*)&node->c, sizeof(char));//단말 노드의 문자를 파일에쓴다.
+        node = root_node;
+        w_len++;
+    }
 }
 
 void DeleteTree(Node* pNode) { //동적할당 해제
@@ -137,7 +258,6 @@ int main()
     string input_file_name, output_file_name;
     ifstream fin;
     ofstream fout;
-    
 
     cout << "1: 압축, 2: 압축 해제, 3: 종료\n";
     cin >> menu_num;
@@ -167,6 +287,37 @@ int main()
         fout.close();
         DeleteTree(root_node);
     }
+    else if (menu_num == 2) {
+        cout << "입력할 파일명 입력: ";
+        cin >> input_file_name;
+        cout << "출력할 파일명 입력: ";
+        cin >> output_file_name;
+
+        input_file_name += ".txt";
+        output_file_name += ".txt";
+        fin.open(input_file_name.c_str(), ios::binary);
+        fout.open(output_file_name.c_str(), ios::binary);
+
+        if (!fin) {
+            cout << "파일이 존재하지 않습니다.";
+            return -1;
+        }
+        if (!fout) {
+            cout << "파일 생성을 실패했습니다.";
+            return -1;
+        }
+
+        Release(fin, fout);
+
+        fin.close();
+        fout.close();
+        DeleteTree(root_node);
+    }
+    else {
+        cout << "종료합니다.";
+        return 0;
+    }
+    return 0;
 }
 /*
 https://blockdmask.tistory.com/392
