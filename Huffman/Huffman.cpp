@@ -1,4 +1,5 @@
-﻿#include <iostream>
+﻿#include <stdint.h>
+#include <iostream>
 #include <string>
 #include <queue>
 #include <vector>
@@ -259,7 +260,7 @@ int main()
     ifstream fin;
     ofstream fout;
 
-    cout << "1: 압축, 2: 압축 해제, 3: 종료\n";
+    cout << "Huffman(1: 압축, 2: 압축 해제, 3: 종료): ";
     cin >> menu_num;
     if (menu_num == 1) {
         cout << "입력할 파일명 입력: ";
@@ -267,8 +268,6 @@ int main()
         cout << "출력할 파일명 입력: ";
         cin >> output_file_name;
         
-        input_file_name += ".txt";
-        output_file_name += ".txt";
         fin.open(input_file_name.c_str(), ios::binary);
         fout.open(output_file_name.c_str(), ios::binary);
 
@@ -293,8 +292,6 @@ int main()
         cout << "출력할 파일명 입력: ";
         cin >> output_file_name;
 
-        input_file_name += ".txt";
-        output_file_name += ".txt";
         fin.open(input_file_name.c_str(), ios::binary);
         fout.open(output_file_name.c_str(), ios::binary);
 
@@ -319,6 +316,3 @@ int main()
     }
     return 0;
 }
-/*
-https://blockdmask.tistory.com/392
-*/

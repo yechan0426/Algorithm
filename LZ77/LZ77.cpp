@@ -1,64 +1,77 @@
 ﻿#include <iostream>
 #include <string>
 #include <vector>
+#include <fstream>
 
 #define LOOKAHEAD_BUFF_SIZE 64
 #define WINDOW_BUFF_SIZE    32
 
 using namespace std;
 
+struct LLD{
+	int i;
+	int j;
+	char x;
+};
+
 int main()
 {
-	string INPUT, OUTPUT, tmp;
-	int literal, length;
-	char distance;
-	int cnt;
+    int menu_num;
+    string input_file_name, output_file_name;
+    ifstream fin;
+    ofstream fout;
 
-	while (true) {
-		getline(cin, tmp);
-		if (tmp == "!STOP") { break; }
-		INPUT += tmp;
-	}
+    cout << "LZ77(1: 압축, 2: 압축 해제, 3: 종료): ";
+    cin >> menu_num;
+    if (menu_num == 1) {
+        cout << "입력할 파일명 입력: ";
+        cin >> input_file_name;
+        cout << "출력할 파일명 입력: ";
+        cin >> output_file_name;
 
-	OUTPUT = "LB";
-	OUTPUT += to_string(LOOKAHEAD_BUFF_SIZE);
-	OUTPUT += "WB";
-	OUTPUT += to_string(WINDOW_BUFF_SIZE);
+        fin.open(input_file_name.c_str(), ios::binary);
+        fout.open(output_file_name.c_str(), ios::binary);
 
-	int i, k;
-	for (i = 0; i < INPUT.size(); i++) {
-		literal = 0;
-		length = 0;
-		k = i - LOOKAHEAD_BUFF_SIZE;
-		distance = INPUT[i];
-		if (k < 0) {
-			k = 0;
-		}
-		for (k; k < i; k++) {
-			cnt = 0;
-			while (i + cnt + 1 < INPUT.size() && k < i && INPUT[k] == INPUT[i + cnt]) {
-				cnt++;
-				k++;
-			}if (cnt == 0) {
-				continue;
-			}
-			if (cnt >= length) {
-				length = cnt;
-				literal = i - k + cnt;
-				distance = INPUT[i + cnt];
-			}
-		}
-		i += length;
-		OUTPUT += "(";
-		OUTPUT += to_string(literal);
-		OUTPUT += ",";
-		OUTPUT += to_string(length);
-		OUTPUT += ",";
-		OUTPUT += distance;
-		OUTPUT += ")";
-	}
+        if (!fin) {
+            cout << "파일이 존재하지 않습니다.";
+            return -1;
+        }
+        if (!fout) {
+            cout << "파일 생성을 실패했습니다.";
+            return -1;
+        }
 
-	cout << OUTPUT;
+        Compress(fin, fout);
 
-	return 0;
+        fin.close();
+        fout.close();
+    }
+    else if (menu_num == 2) {
+        cout << "입력할 파일명 입력: ";
+        cin >> input_file_name;
+        cout << "출력할 파일명 입력: ";
+        cin >> output_file_name;
+		
+        fin.open(input_file_name.c_str(), ios::binary);
+        fout.open(output_file_name.c_str(), ios::binary);
+
+        if (!fin) {
+            cout << "파일이 존재하지 않습니다.";
+            return -1;
+        }
+        if (!fout) {
+            cout << "파일 생성을 실패했습니다.";
+            return -1;
+        }
+
+        Release(fin, fout);
+
+        fin.close();
+        fout.close();
+    }
+    else {
+        cout << "종료합니다.";
+        return 0;
+    }
+    return 0;
 }
