@@ -1,0 +1,2 @@
+filesystem::path p("./tmp.b");
+        filesystem::remove(p);

@@ -1,19 +1,11 @@
-﻿#include <stdint.h>
-#include <iostream>
+﻿#include <iostream>
 #include <string>
-#include <queue>
 #include <vector>
-#include <unordered_map>
 #include <fstream>
+#include "Huffman.h"
 
-using namespace std;
+using namespace Huffman;
 
-struct Node {
-    char c;  //문자열
-    uint32_t cnt;        //빈도수
-    Node *left;     //왼쪽 노드
-    Node *right;    //오른쪽 노드
-};
 Node *root_node = nullptr;    //루트 노드
 
 unordered_map<char, uint32_t> huffman_code; //[문자] = 이진코드
@@ -27,6 +19,7 @@ struct comp { // 우선순위 큐를 위한 연산자 오버로딩
 };
 
 priority_queue<Node*, vector<Node*>, comp> node_queue; //cnt가 낮으면 top에 위치
+
 
 void FileRead(vector<string>& v, ifstream& fin, long long& len) { //파일을 읽고 벡터에 저장
     string line;
@@ -118,7 +111,7 @@ void WriteByte(ofstream& fout, uint32_t b_code, uint8_t b_len, bool flush) {
     bit = (bit << b_len) | b_code;
 }
 
-void Compress(ifstream& fin, ofstream& fout) {
+void Huffman::Compress(ifstream& fin, ofstream& fout) {
     vector<string> s_input;                   //입력된 문자열 (string형)
     uint32_t size;
     long long s_len = 0;
@@ -206,7 +199,7 @@ bool ReadBit(ifstream& fin)
 
     return HuffBit;
 }
-void Release(ifstream& fin, ofstream& fout) {
+void Huffman::Release(ifstream& fin, ofstream& fout) {
     uint32_t size;
     char c;
     uint32_t num;
@@ -253,66 +246,48 @@ void DeleteTree(Node* pNode) { //동적할당 해제
     free(pNode);
 }
 
-int main()
-{
-    int menu_num;
-    string input_file_name, output_file_name;
+void Huffman::InputAndCompress(string input_file_name, string output_file_name) {
+    ifstream fin;
+    ofstream fout;
+    
+    fin.open(input_file_name.c_str(), ios::binary);
+    fout.open(output_file_name.c_str(), ios::binary);
+
+    if (!fin) {
+        cout << "파일이 존재하지 않습니다.";
+        return;
+    }
+    if (!fout) {
+        cout << "파일 생성을 실패했습니다.";
+        return;
+    }
+
+    Compress(fin, fout);
+
+    fin.close();
+    fout.close();
+    DeleteTree(root_node);
+}
+
+void Huffman::OutputAndRelease(string input_file_name, string output_file_name) {
     ifstream fin;
     ofstream fout;
 
-    cout << "Huffman(1: 압축, 2: 압축 해제, 3: 종료): ";
-    cin >> menu_num;
-    if (menu_num == 1) {
-        cout << "입력할 파일명 입력: ";
-        cin >> input_file_name;
-        cout << "출력할 파일명 입력: ";
-        cin >> output_file_name;
-        
-        fin.open(input_file_name.c_str(), ios::binary);
-        fout.open(output_file_name.c_str(), ios::binary);
+    fin.open(input_file_name.c_str(), ios::binary);
+    fout.open(output_file_name.c_str(), ios::binary);
 
-        if (!fin) {
-            cout << "파일이 존재하지 않습니다.";
-            return -1;
-        }
-        if (!fout) {
-            cout << "파일 생성을 실패했습니다.";
-            return -1;
-        }
-
-        Compress(fin, fout);
-
-        fin.close();
-        fout.close();
-        DeleteTree(root_node);
+    if (!fin) {
+        cout << "파일이 존재하지 않습니다.";
+        return;
     }
-    else if (menu_num == 2) {
-        cout << "입력할 파일명 입력: ";
-        cin >> input_file_name;
-        cout << "출력할 파일명 입력: ";
-        cin >> output_file_name;
-
-        fin.open(input_file_name.c_str(), ios::binary);
-        fout.open(output_file_name.c_str(), ios::binary);
-
-        if (!fin) {
-            cout << "파일이 존재하지 않습니다.";
-            return -1;
-        }
-        if (!fout) {
-            cout << "파일 생성을 실패했습니다.";
-            return -1;
-        }
-
-        Release(fin, fout);
-
-        fin.close();
-        fout.close();
-        DeleteTree(root_node);
+    if (!fout) {
+        cout << "파일 생성을 실패했습니다.";
+        return;
     }
-    else {
-        cout << "종료합니다.";
-        return 0;
-    }
-    return 0;
+
+    Release(fin, fout);
+
+    fin.close();
+    fout.close();
+    DeleteTree(root_node);
 }
