@@ -12,8 +12,8 @@ namespace Huffman{
     struct Node {
         char c;          //문자열
         uint32_t cnt;    //빈도수
-        Node *left;      //왼쪽 노드
-        Node *right;     //오른쪽 노드
+        Node *left = nullptr;      //왼쪽 노드
+        Node *right = nullptr;     //오른쪽 노드
     };
 
     void Compress(ifstream& fin, ofstream& fout);

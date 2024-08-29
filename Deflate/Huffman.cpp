@@ -291,3 +291,8 @@ void Huffman::OutputAndRelease(string input_file_name, string output_file_name) 
     fout.close();
     DeleteTree(root_node);
 }
+
+int main(){
+    InputAndCompress("test1.txt", "tmp.b");
+    OutputAndRelease("tmp.b", "test2.txt");
+}

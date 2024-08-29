@@ -14,7 +14,6 @@ void FileRead(string& v, ifstream& fin) { //파일을 읽고 벡터에 저장
         getline(fin, line);
 		v += line;
         if (fin.eof()) break;
-		v += '\n';
     }
 }
 
@@ -34,7 +33,7 @@ void LZ77::Compress(ifstream& fin, ofstream& fout) { //압축
 	for (i = 0; i < s_input.size();) {
         if (i >= LOOKAHEAD_BUFF_SIZE) { break; }
         lookahead_buff.push(s_input[i++]);
-    }
+    }printf("\n");
 
     j = i;
     tmpM.i = 0;
@@ -53,13 +52,7 @@ void LZ77::Compress(ifstream& fin, ofstream& fout) { //압축
 
         while (!tmpSB.empty()) {
             tmp.x = tmpLB.front();
-            if (tmpLB.size() <= 1) {
-                if (tmp.j >= tmpM.j) {
-                    tmpM = tmp;
-                }
-                break;
-            }
-            if (tmpSB.front() != tmpLB.front()) {
+            if (tmpLB.size() <= 1 || tmpSB.front() != tmpLB.front()) {
                 tmpSB.pop();
                 if (tmp.j >= tmpM.j) {
                     tmpM = tmp;
@@ -105,30 +98,21 @@ void LZ77::Release(ifstream& fin, ofstream& fout) { //압축 해제
 
     while (true) {
         LLDRead(tmp, fin);
-        if (!tmp.i) {
-            search_buff.push(tmp.x);
-            if (search_buff.size() > SEARCH_BUFF_SIZE) { search_buff.pop(); }
-            fout.write(&tmp.x, sizeof(char));
-            continue;
+        if (fin.eof()) break;
+
+        if (tmp.i != 0) {
+            tmpSB = search_buff;
+            while (tmpSB.size() > tmp.i) { tmpSB.pop(); }
+            for (int i = 0; i < tmp.j; i++) {
+                search_buff.push(tmpSB.front());
+                if (search_buff.size() > SEARCH_BUFF_SIZE) { search_buff.pop(); }
+                fout.write(&tmpSB.front(), sizeof(char));
+                tmpSB.pop();
+            }
         }
-
-        tmpSB = search_buff;
-        i = tmpSB.size()-tmp.i;
-
-        for (k = 0; k < i; k++) { tmpSB.pop(); }
-
-        for (k = 0; k < tmp.j; k++) {
-            search_buff.push(tmpSB.front());
-            if (search_buff.size() > SEARCH_BUFF_SIZE) { search_buff.pop(); }
-            fout.write(&tmpSB.front(), sizeof(char));
-            tmpSB.pop();
-        }
-
         search_buff.push(tmp.x);
         if (search_buff.size() > SEARCH_BUFF_SIZE) { search_buff.pop(); }
         fout.write(&tmp.x, sizeof(char));
-
-        if (fin.eof()) break;
     }
 }
 
