@@ -10,13 +10,13 @@ int main(){
     int menu_num;
     string in_file, out_file;
 
-    cout << "Deflate(1: ¾ÐÃà, 2: ¾ÐÃà ÇØÁ¦, 3:Á¾·á): ";
+    cout << "Deflate(1: ì••ì¶•, 2: ì••ì¶• í•´ì œ, 3:ì¢…ë£Œ): ";
     cin >> menu_num;
 
     if (menu_num == 1) {
-        cout << "¾ÐÃàÇÒ ÆÄÀÏ ÀÌ¸§: ";
+        cout << "ì••ì¶•í•  íŒŒì¼ ì´ë¦„ ìž…ë ¥: ";
         cin >> in_file;
-        cout << "Ãâ·ÂÇÒ ÆÄÀÏ ÀÌ¸§: ";
+        cout << "ì¶œë ¥í•  íŒŒì¼ ì´ë¦„ ìž…ë ¥: ";
         cin >> out_file;
 
         ifstream fin;
@@ -28,11 +28,11 @@ int main(){
         oftmp.open("tmp.b", ios::binary);
 
         if (!fin) {
-            cout << "ÀÔ·Â ÆÄÀÏÀ» ¿­Áö ¸øÇÏ¿´½À´Ï´Ù.\n";
+            cout << "íŒŒì¼ì„ ì°¾ì§€ ëª»í•˜ì˜€ìŠµë‹ˆë‹¤.\n";
             return -1;
         }
         if (!oftmp) {
-            cout << "tmpÆÄÀÏ »ý¼º ½ÇÆÐ\n";
+            cout << "tmpíŒŒì¼ ìƒì„± ì‹¤íŒ¨\n";
             return -1;
         }
 
@@ -46,11 +46,11 @@ int main(){
         fout.open(out_file.c_str(), ios::binary);
 
         if (!iftmp) {
-            cout << "tmpÆÄÀÏ ·Îµå ½ÇÆÐ\n";
+            cout << "tmpíŒŒì¼ ë¡œë“œ ì‹¤íŒ¨\n";
             return -1;
         }
         if (!fout) {
-            cout << "Ãâ·Â ÆÄÀÏ »ý¼ºÀ» ½ÇÆÐÇÏ¿´½À´Ï´Ù.\n";
+            cout << "ì¶œë ¥ íŒŒì¼ ìƒì„±ì„ ì‹¤íŒ¨í•˜ì˜€ìŠµë‹ˆë‹¤.\n";
             return -1;
         }
 
@@ -60,9 +60,9 @@ int main(){
         fout.close();
     }
     else if (menu_num == 2) {
-        cout << "¾ÐÃà ÇØÁ¦ÇÒ ÆÄÀÏ ÀÌ¸§: ";
+        cout << "ì••ì¶• í•´ì œí•  íŒŒì¼ ì´ë¦„ ìž…ë ¥: ";
         cin >> in_file;
-        cout << "Ãâ·ÂÇÒ ÆÄÀÏ ÀÌ¸§: ";
+        cout << "ì¶œë ¥í•  íŒŒì¼ ì´ë¦„ ìž…ë ¥: ";
         cin >> out_file;
 
         ifstream fin;
@@ -74,11 +74,11 @@ int main(){
         oftmp.open("tmp.b", ios::binary);
 
         if (!fin) {
-            cout << "ÀÔ·Â ÆÄÀÏÀ» ¿­Áö ¸øÇÏ¿´½À´Ï´Ù.\n";
+            cout << "íŒŒì¼ì„ ì°¾ì§€ ëª»í•˜ì˜€ìŠµë‹ˆë‹¤.\n";
             return -1;
         }
         if (!oftmp) {
-            cout << "tmpÆÄÀÏ »ý¼º ½ÇÆÐ\n";
+            cout << "tmpíŒŒì¼ ìƒì„± ì‹¤íŒ¨\n";
             return -1;
         }
 
@@ -92,11 +92,11 @@ int main(){
         fout.open(out_file.c_str(), ios::binary);
 
         if (!iftmp) {
-            cout << "tmpÆÄÀÏ ·Îµå ½ÇÆÐ\n";
+            cout << "tmpíŒŒì¼ ë¡œë“œ ì‹¤íŒ¨\n";
             return -1;
         }
         if (!fout) {
-            cout << "Ãâ·Â ÆÄÀÏ »ý¼ºÀ» ½ÇÆÐÇÏ¿´½À´Ï´Ù.\n";
+            cout << "ì¶œë ¥ íŒŒì¼ ìƒì„±ì„ ì‹¤íŒ¨í•˜ì˜€ìŠµë‹ˆë‹¤.\n";
             return -1;
         }
 
@@ -106,7 +106,7 @@ int main(){
         fout.close();
     }
     else {
-        cout << "Á¾·á";
+        cout << "ì¢…ë£Œ";
         return 0;
     }
 

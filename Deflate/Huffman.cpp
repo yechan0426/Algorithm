@@ -21,13 +21,13 @@ struct comp { // 우선순위 큐를 위한 연산자 오버로딩
 priority_queue<Node*, vector<Node*>, comp> node_queue; //cnt가 낮으면 top에 위치
 
 
-void FileRead(string& v, ifstream& fin, long long& len) { //파일을 읽고 벡터에 저장
-    string line;
+void FileRead(vector<char>& v, ifstream& fin, long long& len) { //파일을 읽고 벡터에 저장
+    char c;
     while (true) {
-        getline(fin, line);
-		v += line;
-        len += line.size();
+        fin.get(c);
         if (fin.eof()) break;
+		v.push_back(c);
+        len++;
     }
 }
 
@@ -40,7 +40,7 @@ void DeleteTree(Node* pNode) { //동적할당 해제
     free(pNode);
 }
 
-void GetFrequency(string& v) { //문자의 빈도 수 구하고 저장
+void GetFrequency(vector<char>& v) { //문자의 빈도 수 구하고 저장
     for (char i : v) {
         frequency[i]++;
     }
@@ -118,9 +118,11 @@ void WriteByte(ofstream& fout, uint32_t b_code, uint8_t b_len, bool flush) {
 }
 
 void Huffman::Compress(ifstream& fin, ofstream& fout) {
-    string s_input;                   //입력된 문자열 (string형)
+    vector<char> s_input;                   //입력된 문자열 (string형)
     uint32_t size;
     long long s_len = 0;
+
+    for(char i:s_input){printf("%d ",i);}
 
     FileRead(s_input, fin, s_len);
     GetFrequency(s_input);
@@ -250,3 +252,38 @@ void Huffman::Release(ifstream& fin, ofstream& fout) {
 
     DeleteTree(root_node);
 }
+/*
+int main() {
+    int m;
+    cin >> m;
+    string in, out;
+
+    ifstream fin;
+    ofstream fout;
+
+    if(m==1){
+        cin >> in;
+        cin >> out;
+
+        fin.open(in.c_str(), ios::binary);
+        fout.open(out.c_str(), ios::binary);
+
+        Compress(fin, fout);
+
+        fin.close();
+        fout.close();
+    }
+    else if(m==2){
+        cin >> in;
+        cin >> out;
+
+        fin.open(in.c_str(), ios::binary);
+        fout.open(out.c_str(), ios::binary);
+
+        Release(fin, fout);
+
+        fin.close();
+        fout.close();
+    }
+}
+*/

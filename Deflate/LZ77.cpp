@@ -6,28 +6,28 @@
 
 using namespace LZ77;
 
-std::queue<char> search_buff, lookahead_buff;
+std::queue<wchar_t> search_buff, lookahead_buff;
 
-void FileRead(string& v, ifstream& fin) { //파일을 읽고 벡터에 저장
-    string line;
+void FileRead(vector<wchar_t>& v, ifstream& fin) { //파일을 읽고 벡터에 저장
+    wchar_t c;
     while (true) {
-        getline(fin, line);
-		v += line;
+        fin.get(c);
         if (fin.eof()) break;
+		v.push_back(c);
     }
 }
 
 void LLDWrite(LLD& t, ofstream& fout) {
-	fout.write((char*)&t.i, sizeof(int));
-	fout.write((char*)&t.j, sizeof(int));
-	fout.write(&t.x, sizeof(char));
+	fout.write((char*)&t.i, sizeof(uint8_t));
+	fout.write((char*)&t.j, sizeof(uint8_t));
+	fout.write((char*)&t.x, sizeof(wchar_t));
 }
 
 void LZ77::Compress(ifstream& fin, ofstream& fout) { //압축
-	string s_input;
+	vector<wchar_t> s_input;
 	int i, k, j;
 	LLD tmpM, tmp;
-    queue<char> tmpSB, tmpLB;
+    queue<wchar_t> tmpSB, tmpLB;
 
 	FileRead(s_input, fin);
 	for (i = 0; i < s_input.size();) {
@@ -86,14 +86,14 @@ void LZ77::Compress(ifstream& fin, ofstream& fout) { //압축
 }
 
 void LLDRead(LLD& t, ifstream& fin) {
-	fin.read((char*)&t.i, sizeof(int));
-	fin.read((char*)&t.j, sizeof(int));
-	fin.read(&t.x, sizeof(char));
+	fin.read((char*)&t.i, sizeof(uint8_t));
+	fin.read((char*)&t.j, sizeof(uint8_t));
+	fin.read((char*)&t.x, sizeof(wchar_t));
 }
 
 void LZ77::Release(ifstream& fin, ofstream& fout) { //압축 해제
     LLD tmp;
-    queue<char> tmpSB;
+    queue<wchar_t> tmpSB;
     int i, k;
 
     while (true) {
@@ -106,12 +106,46 @@ void LZ77::Release(ifstream& fin, ofstream& fout) { //압축 해제
             for (int i = 0; i < tmp.j; i++) {
                 search_buff.push(tmpSB.front());
                 if (search_buff.size() > SEARCH_BUFF_SIZE) { search_buff.pop(); }
-                fout.write(&tmpSB.front(), sizeof(char));
+                fout.write((char*)&tmpSB.front(), sizeof(wchar_t));
                 tmpSB.pop();
             }
         }
         search_buff.push(tmp.x);
         if (search_buff.size() > SEARCH_BUFF_SIZE) { search_buff.pop(); }
-        fout.write(&tmp.x, sizeof(char));
+        fout.write((char*)&tmp.x, sizeof(wchar_t));
+    }
+}
+
+int main() {
+    int m;
+    cin >> m;
+    string in, out;
+
+    ifstream fin;
+    ofstream fout;
+
+    if(m==1){
+        cin >> in;
+        cin >> out;
+
+        fin.open(in.c_str(), ios::binary);
+        fout.open(out.c_str(), ios::binary);
+
+        Compress(fin, fout);
+
+        fin.close();
+        fout.close();
+    }
+    else if(m==2){
+        cin >> in;
+        cin >> out;
+
+        fin.open(in.c_str(), ios::binary);
+        fout.open(out.c_str(), ios::binary);
+
+        Release(fin, fout);
+
+        fin.close();
+        fout.close();
     }
 }

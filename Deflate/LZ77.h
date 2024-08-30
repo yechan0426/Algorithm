@@ -1,8 +1,8 @@
 #ifndef __LZ77_H__
 #define __LZ77_H__
 
-#define SEARCH_BUFF_SIZE    64
-#define LOOKAHEAD_BUFF_SIZE 32
+#define SEARCH_BUFF_SIZE    64 // ~ 256
+#define LOOKAHEAD_BUFF_SIZE 32 // ~ 256
 
 #include <queue>
 #include <string>
@@ -11,9 +11,9 @@ using namespace std;
 
 namespace LZ77{
 	struct LLD{
-		int i;
-		int j;
-		char x;
+		uint8_t i;
+		uint8_t j;
+		wchar_t x;
 	};
 
 	void Compress(ifstream& fin, ofstream& fout);

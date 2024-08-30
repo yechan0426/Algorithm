@@ -10,7 +10,7 @@ using namespace std;
 
 namespace Huffman{
     struct Node {
-        char c;          //문자열
+        uint8_t c;          //문자열
         uint32_t cnt;    //빈도수
         Node *left = nullptr;      //왼쪽 노드
         Node *right = nullptr;     //오른쪽 노드
