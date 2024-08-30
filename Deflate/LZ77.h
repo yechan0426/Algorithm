@@ -18,9 +18,6 @@ namespace LZ77{
 
 	void Compress(ifstream& fin, ofstream& fout);
 	void Release(ifstream& fin, ofstream& fout);
-
-	void InputAndCompress(string input_file_name, string output_file_name);
-	void OutputAndRelease(string input_file_name, string output_file_name);
 }
 
 #endif

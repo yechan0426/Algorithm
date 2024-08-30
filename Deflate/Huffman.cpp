@@ -21,21 +21,28 @@ struct comp { // 우선순위 큐를 위한 연산자 오버로딩
 priority_queue<Node*, vector<Node*>, comp> node_queue; //cnt가 낮으면 top에 위치
 
 
-void FileRead(vector<string>& v, ifstream& fin, long long& len) { //파일을 읽고 벡터에 저장
+void FileRead(string& v, ifstream& fin, long long& len) { //파일을 읽고 벡터에 저장
     string line;
     while (true) {
         getline(fin, line);
-        v.push_back(line);
+		v += line;
         len += line.size();
         if (fin.eof()) break;
     }
 }
 
-void GetFrequency(vector<string>& v) { //문자의 빈도 수 구하고 저장
-    for (string i : v) {
-        for (char c : i) {
-            frequency[c]++;
-        }
+void DeleteTree(Node* pNode) { //동적할당 해제
+    if (pNode == nullptr) { return; }
+
+    DeleteTree(pNode->left);
+    DeleteTree(pNode->right);
+
+    free(pNode);
+}
+
+void GetFrequency(string& v) { //문자의 빈도 수 구하고 저장
+    for (char i : v) {
+        frequency[i]++;
     }
 }
 
@@ -50,7 +57,6 @@ void MakeHuffmanTree() { //허프먼 트리 생성
         tmp_node->right = nullptr;
 
         node_queue.push(tmp_node);
-        
     }
 
     
@@ -74,7 +80,7 @@ void MakeHuffmanTree() { //허프먼 트리 생성
 }
 
 void MakeHuffmanCode(Node *node, uint32_t num, uint8_t len) { // 문자열에 이진수 할당
-    if (node->c != '\0') {
+    if (node->left == nullptr && node->right == nullptr) {
         huffman_code[node->c] = num;
         h_c_len[node->c] = len;
         return;
@@ -112,7 +118,7 @@ void WriteByte(ofstream& fout, uint32_t b_code, uint8_t b_len, bool flush) {
 }
 
 void Huffman::Compress(ifstream& fin, ofstream& fout) {
-    vector<string> s_input;                   //입력된 문자열 (string형)
+    string s_input;                   //입력된 문자열 (string형)
     uint32_t size;
     long long s_len = 0;
 
@@ -132,19 +138,21 @@ void Huffman::Compress(ifstream& fin, ofstream& fout) {
     }
 
     //압축된 내용저장
-    for (string s : s_input) {
-        for (char c : s) {
-            WriteByte(fout, huffman_code[c], h_c_len[c], false);
-        }
+    for (char c : s_input) {
+        WriteByte(fout, huffman_code[c], h_c_len[c], false);
     }
     WriteByte(fout, 0, 0, true);// 마지막 비트32개 모이지 않아도 저장
+
+    DeleteTree(root_node);
 }
 
 void ReMakeHuffTree(char c)
 {
-    if (root_node == nullptr)
-        root_node = (Node*)calloc(1, sizeof(Node));
-
+    if (root_node == nullptr){
+        root_node = (Node*)malloc(sizeof(Node));
+        root_node->left = nullptr;
+        root_node->right = nullptr;
+    }
     // HuffCode와nLength를 이용해서 허프만 트리 구성하기
     Node* node = nullptr;
     Node* Temp = nullptr;
@@ -161,7 +169,9 @@ void ReMakeHuffTree(char c)
             Temp = Temp->left;
             if (Temp == nullptr)
             {
-                Temp = (Node*)calloc(1, sizeof(Node));
+                Temp = (Node*)malloc(sizeof(Node));
+                Temp->left = nullptr;
+                Temp->right = nullptr;
                 node->left = Temp;
             }
         }
@@ -170,7 +180,9 @@ void ReMakeHuffTree(char c)
             Temp = Temp->right;
             if (Temp == nullptr)
             {
-                Temp = (Node*)calloc(1, sizeof(Node));
+                Temp = (Node*)malloc(sizeof(Node));
+                Temp->left = nullptr;
+                Temp->right = nullptr;
                 node->right = Temp;
             }
         }
@@ -235,64 +247,6 @@ void Huffman::Release(ifstream& fin, ofstream& fout) {
         node = root_node;
         w_len++;
     }
-}
 
-void DeleteTree(Node* pNode) { //동적할당 해제
-    if (pNode == nullptr) { return; }
-
-    DeleteTree(pNode->left);
-    DeleteTree(pNode->right);
-
-    free(pNode);
-}
-
-void Huffman::InputAndCompress(string input_file_name, string output_file_name) {
-    ifstream fin;
-    ofstream fout;
-    
-    fin.open(input_file_name.c_str(), ios::binary);
-    fout.open(output_file_name.c_str(), ios::binary);
-
-    if (!fin) {
-        cout << "파일이 존재하지 않습니다.";
-        return;
-    }
-    if (!fout) {
-        cout << "파일 생성을 실패했습니다.";
-        return;
-    }
-
-    Compress(fin, fout);
-
-    fin.close();
-    fout.close();
     DeleteTree(root_node);
-}
-
-void Huffman::OutputAndRelease(string input_file_name, string output_file_name) {
-    ifstream fin;
-    ofstream fout;
-
-    fin.open(input_file_name.c_str(), ios::binary);
-    fout.open(output_file_name.c_str(), ios::binary);
-
-    if (!fin) {
-        cout << "파일이 존재하지 않습니다.";
-        return;
-    }
-    if (!fout) {
-        cout << "파일 생성을 실패했습니다.";
-        return;
-    }
-
-    Release(fin, fout);
-
-    fin.close();
-    fout.close();
-    DeleteTree(root_node);
-}
-
-int main(){
-    InputAndCompress("test1.txt", "tmp.b");
-    OutputAndRelease("tmp.b", "test2.txt");
 }
