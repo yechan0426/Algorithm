@@ -18,8 +18,8 @@ void FileRead(vector<char>& v, ifstream& fin) { //파일을 읽고 벡터에 저
 }
 
 void LLDWrite(LLD& t, ofstream& fout) {
-	fout.write((char*)&t.i, sizeof(uint8_t));
-	fout.write((char*)&t.j, sizeof(uint8_t));
+    uint8_t tmp = (t.i<<3) + t.j;
+	fout.write((char*)&tmp, sizeof(uint8_t));
 	fout.write((char*)&t.x, sizeof(char));
 }
 
@@ -87,9 +87,11 @@ void LZ77::Compress(ifstream& fin, ofstream& fout) { //압축
 }
 
 void LLDRead(LLD& t, ifstream& fin) {
-	fin.read((char*)&t.i, sizeof(uint8_t));
-	fin.read((char*)&t.j, sizeof(uint8_t));
+    uint8_t tmp;
+	fin.read((char*)&tmp, sizeof(uint8_t));
 	fin.read((char*)&t.x, sizeof(char));
+    t.i = tmp>>3;
+    t.j = tmp&7;
 }
 
 void LZ77::Release(ifstream& fin, ofstream& fout) { //압축 해제
@@ -116,7 +118,7 @@ void LZ77::Release(ifstream& fin, ofstream& fout) { //압축 해제
         fout.write((char*)&tmp.x, sizeof(char));
     }
 }
-/*
+
 int main() {
     int m;
     cin >> m;
@@ -150,4 +152,3 @@ int main() {
         fout.close();
     }
 }
-*/
