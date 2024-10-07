@@ -6,7 +6,7 @@
 
 using namespace LZ77;
 
-std::queue<char> search_buff, lookahead_buff;
+long long search_buff, lookahead_buff;
 
 void FileRead(vector<char>& v, ifstream& fin) { //파일을 읽고 벡터에 저장
     char c;
@@ -18,80 +18,62 @@ void FileRead(vector<char>& v, ifstream& fin) { //파일을 읽고 벡터에 저
 }
 
 void LLDWrite(LLD& t, ofstream& fout) {
-    uint8_t tmp = (t.i<<3) + t.j;
-	fout.write((char*)&tmp, sizeof(uint8_t));
+	fout.write((char*)&t.i, sizeof(uint16_t));
+	fout.write((char*)&t.j, sizeof(uint8_t));
 	fout.write((char*)&t.x, sizeof(char));
 }
 
 void LZ77::Compress(ifstream& fin, ofstream& fout) { //압축
 	vector<char> s_input;
-	int i, k, j;
+    long long size;
+	long long i, j, k;
 	LLD tmpM, tmp;
-    queue<char> tmpSB, tmpLB;
 
 	FileRead(s_input, fin);
-	for (i = 0; i < s_input.size();) {
-        if (i >= LOOKAHEAD_BUFF_SIZE) { break; }
-        lookahead_buff.push(s_input[i++]);
-    }printf("\n");
 
-    j = i;
+    size = s_input.size();
+
     tmpM.i = 0;
     tmpM.j = 0;
     tmpM.x = '\0';
-    for (i = 0; i < s_input.size();) {
-        if (lookahead_buff.empty()) { break; }
-        tmpSB = search_buff;
-        tmpLB = lookahead_buff;
+    for (i = 0; i < size;) {
+        search_buff = i - SEARCH_BUFF_SIZE;
+        if(search_buff < 0){ search_buff = 0; }
 
-        tmpM.i = 0;
-        tmpM.j = 0;
-        tmpM.x = tmpLB.front();
+        lookahead_buff = i + LOOKAHEAD_BUFF_SIZE;
+        if(lookahead_buff >= size){ lookahead_buff = size; }
 
         tmp = tmpM;
 
-        while (!tmpSB.empty()) {
-            if (tmpLB.size() <= 1 || tmpSB.front() != tmpLB.front()) {
-                tmpSB.pop();
-                if (tmp.j >= tmpM.j) {
-                    tmpM = tmp;
-                }
-                tmpLB = lookahead_buff;
+        k = 0;
+        for(j = search_buff; j < i; j++){
+            tmp.x = s_input[i+k];
+            if(i+k >= lookahead_buff){
+                tmpM = tmp;
+                break;
+            }
+            if(s_input[j] != s_input[i+k]){
+                if(tmpM.j < tmp.j){ tmpM = tmp; }
+
                 tmp.i = 0;
                 tmp.j = 0;
-                tmp.x = tmpLB.front();
+                tmp.x = '\0';
+                k = 0;
                 continue;
             }
-            if (!tmp.i) { tmp.i = tmpSB.size(); }
+            if(tmp.i == 0){ tmp.i = i-j; }
             tmp.j++;
-            tmpSB.pop();
-            tmpLB.pop();
-            tmp.x = tmpLB.front();
-        }
-        if (tmp.j >= tmpM.j) {
-            tmpM = tmp;
+            k++;
         }
 
         LLDWrite(tmpM, fout);
-
-        for (k = 0; k <= tmpM.j; k++) {
-            if (lookahead_buff.empty()) { break; }
-            search_buff.push(lookahead_buff.front());
-            if (search_buff.size() > SEARCH_BUFF_SIZE) { search_buff.pop(); }
-            lookahead_buff.pop();
-            i++;
-            if (j >= s_input.size()) { continue; }
-            lookahead_buff.push(s_input[j++]);
-        }
     }
 }
 
 void LLDRead(LLD& t, ifstream& fin) {
-    uint8_t tmp;
-	fin.read((char*)&tmp, sizeof(uint8_t));
+	fin.read((char*)&t.i, sizeof(uint16_t));
+    fin.read((char*)&t.j, sizeof(uint8_t));
 	fin.read((char*)&t.x, sizeof(char));
-    t.i = tmp>>3;
-    t.j = tmp&7;
 }
 
 void LZ77::Release(ifstream& fin, ofstream& fout) { //압축 해제
