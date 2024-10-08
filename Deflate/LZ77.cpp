@@ -33,15 +33,16 @@ void LZ77::Compress(ifstream& fin, ofstream& fout) { //압축
 
     size = s_input.size();
 
-    tmpM.i = 0;
-    tmpM.j = 0;
-    tmpM.x = '\0';
-    for (i = 0; i < size;) {
+    for (i = 0; i < size; i++) {
         search_buff = i - SEARCH_BUFF_SIZE;
         if(search_buff < 0){ search_buff = 0; }
 
         lookahead_buff = i + LOOKAHEAD_BUFF_SIZE;
-        if(lookahead_buff >= size){ lookahead_buff = size; }
+        if(lookahead_buff >= size){ lookahead_buff = size-1; }
+
+        tmpM.i = 0;
+        tmpM.j = 0;
+        tmpM.x = s_input[i];
 
         tmp = tmpM;
 
@@ -57,7 +58,6 @@ void LZ77::Compress(ifstream& fin, ofstream& fout) { //압축
 
                 tmp.i = 0;
                 tmp.j = 0;
-                tmp.x = '\0';
                 k = 0;
                 continue;
             }
@@ -65,8 +65,12 @@ void LZ77::Compress(ifstream& fin, ofstream& fout) { //압축
             tmp.j++;
             k++;
         }
+        tmp.x = s_input[i+k];
+        if(tmpM.j < tmp.j){ tmpM = tmp; }
 
         LLDWrite(tmpM, fout);
+
+        i += tmpM.j;
     }
 }
 
@@ -78,29 +82,27 @@ void LLDRead(LLD& t, ifstream& fin) {
 
 void LZ77::Release(ifstream& fin, ofstream& fout) { //압축 해제
     LLD tmp;
-    queue<char> tmpSB;
-    int i, k;
+    vector<char> s_output;
+    long long i, k;
 
+    i = 0;
     while (true) {
         LLDRead(tmp, fin);
         if (fin.eof()) break;
 
-        if (tmp.i != 0) {
-            tmpSB = search_buff;
-            while (tmpSB.size() > tmp.i) { tmpSB.pop(); }
-            for (int i = 0; i < tmp.j; i++) {
-                search_buff.push(tmpSB.front());
-                if (search_buff.size() > SEARCH_BUFF_SIZE) { search_buff.pop(); }
-                fout.write((char*)&tmpSB.front(), sizeof(char));
-                tmpSB.pop();
+        if (tmp.i != 0){
+            for(k = 0; k < tmp.j; k++){
+                s_output.push_back(s_output[i-tmp.i+k]);
             }
+            i += tmp.j;
         }
-        search_buff.push(tmp.x);
-        if (search_buff.size() > SEARCH_BUFF_SIZE) { search_buff.pop(); }
-        fout.write((char*)&tmp.x, sizeof(char));
+        s_output.push_back(tmp.x);
+        i++;
     }
-}
 
+    for(char c:s_output){ fout.write((char*)&c, sizeof(char)); }
+}
+/*
 int main() {
     int m;
     cin >> m;
@@ -134,3 +136,4 @@ int main() {
         fout.close();
     }
 }
+*/
